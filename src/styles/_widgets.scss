@@ -73,3 +73,40 @@
     overflow: auto;
   }
 }
+
+.cover-art-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.cover-art-frame {
+  width: min(180px, 44%);
+  aspect-ratio: 1;
+  background-color: #151515;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-art-frame .cover-art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-art-track-name {
+  color: #eee;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cover-art-artist-name {
+  color: var(--text-muted, #888);
+  font-size: 10px;
+}
