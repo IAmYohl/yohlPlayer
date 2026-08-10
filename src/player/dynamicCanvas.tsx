@@ -18,6 +18,7 @@ const ResponsiveGrid = WidthProvider(GridLayout) as React.ComponentType<any>;
 interface DynamicCanvasProps {
   layout: LayoutSchema;
   isEditing: boolean;
+  showGridBackground: boolean;
   onRemoveWidget: (id: string) => void;
   onLayoutChange: (newWidgets: LayoutSchema['widgets']) => void;
 }
@@ -25,6 +26,7 @@ interface DynamicCanvasProps {
 export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({
   layout,
   isEditing,
+  showGridBackground,
   onRemoveWidget,
   onLayoutChange,
 }) => {
@@ -56,7 +58,7 @@ export const DynamicCanvas: React.FC<DynamicCanvasProps> = ({
   };
 
   return (
-    <div className={`dynamic-canvas ${isEditing ? 'canvas-grid-bg' : ''}`}>
+    <div className={`dynamic-canvas ${isEditing || showGridBackground ? 'canvas-grid-bg' : ''}`}>
       <ResponsiveGrid
         className="layout"
         layout={gridLayout}

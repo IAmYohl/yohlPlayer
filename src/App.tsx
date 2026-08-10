@@ -25,11 +25,26 @@ const PALETTE: { type: WidgetType; label: string; blurb: string; icon: string }[
   { type: 'PLAYLIST_QUEUE', label: 'Playlist Queue', blurb: 'Upcoming tracks list', icon: '📜' },
 ];
 
+interface GlobalCustomizationSettings {
+  showMenuBar: boolean;
+  showToolbar: boolean;
+  showStatusBar: boolean;
+  showCanvasGridBackground: boolean;
+}
+
+const INITIAL_GLOBAL_SETTINGS: GlobalCustomizationSettings = {
+  showMenuBar: true,
+  showToolbar: true,
+  showStatusBar: true,
+  showCanvasGridBackground: false,
+};
+
 export function App() {
   const { tracks, currentTrack, selectDirectory } = useLibrary();
   const [layout, setLayout] = useState<LayoutSchema>(INITIAL_LAYOUT);
   const [isEditing, setIsEditing] = useState(false);
   const [isCinematic, setIsCinematic] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState<GlobalCustomizationSettings>(INITIAL_GLOBAL_SETTINGS);
 
   const handleRemoveWidget = (widgetId: string) => {
     setLayout((prev) => ({ ...prev, widgets: prev.widgets.filter((w) => w.id !== widgetId) }));
@@ -57,6 +72,13 @@ export function App() {
     a.download = `${layout.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const toggleGlobalSetting = (key: keyof GlobalCustomizationSettings) => {
+    setGlobalSettings((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
   return (
@@ -104,6 +126,44 @@ export function App() {
           ))}
         </div>
 
+        <div className="settings-panel">
+          <div className="settings-panel-header">
+            <span>🌍 Global Settings</span>
+          </div>
+          <label className="setting-row">
+            <input
+              type="checkbox"
+              checked={globalSettings.showMenuBar}
+              onChange={() => toggleGlobalSetting('showMenuBar')}
+            />
+            <span>Show menu bar</span>
+          </label>
+          <label className="setting-row">
+            <input
+              type="checkbox"
+              checked={globalSettings.showToolbar}
+              onChange={() => toggleGlobalSetting('showToolbar')}
+            />
+            <span>Show toolbar</span>
+          </label>
+          <label className="setting-row">
+            <input
+              type="checkbox"
+              checked={globalSettings.showStatusBar}
+              onChange={() => toggleGlobalSetting('showStatusBar')}
+            />
+            <span>Show status bar</span>
+          </label>
+          <label className="setting-row">
+            <input
+              type="checkbox"
+              checked={globalSettings.showCanvasGridBackground}
+              onChange={() => toggleGlobalSetting('showCanvasGridBackground')}
+            />
+            <span>Show canvas grid</span>
+          </label>
+        </div>
+
         <div className="drawer-footer">
           <button className="btn-action primary" onClick={exportJSON}>
             💾 Export Layout JSON
@@ -113,7 +173,7 @@ export function App() {
 
       {/* Main Application Wrapper */}
       <div className="main-wrapper">
-        {!isCinematic && (
+        {!isCinematic && globalSettings.showMenuBar && (
           <div className="menu-bar">
             <span className="menu-item">File</span>
             <span className="menu-item">Edit</span>
@@ -132,7 +192,7 @@ export function App() {
           </div>
         )}
 
-        {!isCinematic && (
+        {!isCinematic && globalSettings.showToolbar && (
           <div className="toolbar">
             <button className="file-input-btn" onClick={selectDirectory}>
               📁 Select Directory
@@ -145,12 +205,13 @@ export function App() {
           <DynamicCanvas
             layout={layout}
             isEditing={isEditing}
+            showGridBackground={globalSettings.showCanvasGridBackground}
             onRemoveWidget={handleRemoveWidget}
             onLayoutChange={handleLayoutChange}
           />
         </div>
 
-        {!isCinematic && (
+        {!isCinematic && globalSettings.showStatusBar && (
           <footer className="status-bar">
             <span>Mode: <strong>{isEditing ? 'Live Layout Editor Active' : 'Playback Mode'}</strong></span>
             <span>MP3 | 192 kbps | 48000 Hz</span>

@@ -112,6 +112,33 @@
   border-top: 1px solid var(--border-color);
 }
 
+.settings-panel {
+  padding: 10px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-base);
+}
+
+.settings-panel-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--text-main);
+  margin-top: 6px;
+
+  input {
+    accent-color: var(--accent);
+  }
+}
+
 .btn-action {
   width: 100%;
   padding: 6px;
