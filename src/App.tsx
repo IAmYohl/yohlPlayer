@@ -22,6 +22,7 @@ const PALETTE: { type: WidgetType; label: string; blurb: string; icon: string }[
   { type: 'SPECTROGRAM', label: 'FFT Spectrogram', blurb: 'Real-time frequency visualizer canvas', icon: '📊' },
   { type: 'WAVEFORM', label: 'Audio Waveform', blurb: 'Interactive audio seek scrubber', icon: '〰️' },
   { type: 'COVER_ART', label: 'Cover Art Display', blurb: 'Currently playing album graphic', icon: '🖼️' },
+  { type: 'ADVANCED_PLAYER_CARD', label: 'Advanced Player Card', blurb: 'Now-playing mockup with art, waveform, scrubber, and transport controls', icon: '🎛️' },
   { type: 'PLAYLIST_QUEUE', label: 'Playlist Queue', blurb: 'Upcoming tracks list', icon: '📜' },
 ];
 

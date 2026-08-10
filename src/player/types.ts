@@ -2,6 +2,7 @@
 export type WidgetType = 
   | 'MEDIA_VIEWER'
   | 'COVER_ART'
+  | 'ADVANCED_PLAYER_CARD'
   | 'WAVEFORM'
   | 'SPECTROGRAM'
   | 'PLAYLIST_QUEUE';
