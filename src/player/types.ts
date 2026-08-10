@@ -27,11 +27,20 @@ export interface LayoutSchema {
   widgets: WidgetConfig[];
 }
 
+export interface ArtworkImage {
+  mimeType: string;
+  pictureType: number;
+  pictureTypeName: string;
+  description: string;
+  data: Uint8Array;
+}
+
 // Track metadata for audio files
 export interface Track {
   id: string;
   name: string;
   artist: string;
+  artwork: ArtworkImage[];
   file: File;
   url: string;
 }

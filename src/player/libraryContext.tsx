@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { Track } from './types';
+import type { ArtworkImage, Track } from './types';
 
 interface LibraryContextValue {
   tracks: Track[];
@@ -10,6 +10,204 @@ interface LibraryContextValue {
 }
 
 const LibraryContext = createContext<LibraryContextValue | undefined>(undefined);
+
+function decodeTextPayload(payload: Uint8Array, encoding: number) {
+  if (encoding === 1 || encoding === 2) {
+    const bytes = payload;
+    const text = new TextDecoder('utf-16').decode(bytes);
+    return text.replace(/\u0000+$/g, '').trim();
+  }
+
+  if (encoding === 3) {
+    const text = new TextDecoder('utf-8').decode(payload);
+    return text.replace(/\u0000+$/g, '').trim();
+  }
+
+  const text = new TextDecoder('latin1').decode(payload);
+  return text.replace(/\u0000+$/g, '').trim();
+}
+
+function parseId3v2Metadata(arrayBuffer: ArrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+
+  if (bytes.length < 10 || String.fromCharCode(...bytes.slice(0, 3)) !== 'ID3') {
+    return null;
+  }
+
+  const majorVersion = bytes[3];
+  const tagSize = ((bytes[6] & 0x7f) << 21)
+    | ((bytes[7] & 0x7f) << 14)
+    | ((bytes[8] & 0x7f) << 7)
+    | (bytes[9] & 0x7f);
+
+  const headerSize = 10;
+  const frameStart = headerSize;
+  const frameEnd = Math.min(frameStart + tagSize, bytes.length);
+
+  if (majorVersion < 2 || frameStart >= frameEnd) {
+    return null;
+  }
+
+  let offset = frameStart;
+  let title: string | null = null;
+  let artist: string | null = null;
+
+  while (offset + 10 <= frameEnd) {
+    const frameIdBytes = bytes.slice(offset, offset + 4);
+    const frameId = String.fromCharCode(...frameIdBytes);
+
+    if (frameId === '\u0000\u0000\u0000\u0000') {
+      break;
+    }
+
+    const frameSize = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(offset + 4, false);
+    const frameDataStart = offset + 10;
+    const frameDataEnd = frameDataStart + frameSize;
+
+    if (frameId === 'TIT2' && frameDataStart + 1 < frameEnd && frameDataEnd <= frameEnd) {
+      const framePayload = bytes.slice(frameDataStart, frameDataEnd);
+      const encoding = framePayload[0];
+      const textBytes = framePayload.slice(1);
+      title = decodeTextPayload(textBytes, encoding);
+    } else if (frameId === 'TPE1' && frameDataStart + 1 < frameEnd && frameDataEnd <= frameEnd) {
+      const framePayload = bytes.slice(frameDataStart, frameDataEnd);
+      const encoding = framePayload[0];
+      const textBytes = framePayload.slice(1);
+      artist = decodeTextPayload(textBytes, encoding);
+    }
+
+    offset = frameDataEnd;
+  }
+
+  return { title, artist };
+}
+
+function parseId3v1Metadata(arrayBuffer: ArrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const tagOffset = bytes.length - 128;
+
+  if (tagOffset < 0 || bytes.length < 128) {
+    return null;
+  }
+
+  if (String.fromCharCode(...bytes.slice(tagOffset, tagOffset + 3)) !== 'TAG') {
+    return null;
+  }
+
+  const titleBytes = bytes.slice(tagOffset + 3, tagOffset + 33);
+  const artistBytes = bytes.slice(tagOffset + 63, tagOffset + 93);
+
+  const title = new TextDecoder('latin1').decode(titleBytes).replace(/\u0000+$/g, '').trim();
+  const artist = new TextDecoder('latin1').decode(artistBytes).replace(/\u0000+$/g, '').trim();
+
+  return {
+    title: title || null,
+    artist: artist || null,
+  };
+}
+
+const APIC_PICTURE_TYPES: Record<number, string> = {
+  0: 'Other',
+  1: 'File Icon',
+  2: 'Other File Icon',
+  3: 'Cover Front',
+  4: 'Cover Back',
+  5: 'Leaflet',
+  6: 'Media',
+  7: 'Lead Artist',
+  8: 'Artist',
+  9: 'Conductor',
+  10: 'Band',
+  11: 'Composer',
+  12: 'Lyricist',
+  13: 'Recording Location',
+  14: 'Recording Session',
+  15: 'Performance',
+  16: 'Capture',
+  17: 'Illustration',
+  18: 'Band Logo',
+  19: 'Publisher Logo',
+};
+
+export function extractArtworkTypesFromMp3(arrayBuffer: ArrayBuffer): ArtworkImage[] {
+  const bytes = new Uint8Array(arrayBuffer);
+
+  if (bytes.length < 10 || String.fromCharCode(...bytes.slice(0, 3)) !== 'ID3') {
+    return [];
+  }
+
+  const tagSize = ((bytes[6] & 0x7f) << 21)
+    | ((bytes[7] & 0x7f) << 14)
+    | ((bytes[8] & 0x7f) << 7)
+    | (bytes[9] & 0x7f);
+
+  const frameStart = 10;
+  const frameEnd = Math.min(frameStart + tagSize, bytes.length);
+  const artworkImages: ArtworkImage[] = [];
+
+  let offset = frameStart;
+
+  while (offset + 10 <= frameEnd) {
+    const frameIdBytes = bytes.slice(offset, offset + 4);
+    const frameId = String.fromCharCode(...frameIdBytes);
+
+    if (frameId === '\u0000\u0000\u0000\u0000') {
+      break;
+    }
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const frameSize = view.getUint32(offset + 4, false);
+    const frameDataStart = offset + 10;
+    const frameDataEnd = frameDataStart + frameSize;
+
+    if (frameId === 'APIC' && frameDataStart < frameDataEnd && frameDataEnd <= frameEnd) {
+      const framePayload = bytes.slice(frameDataStart, frameDataEnd);
+      const encoding = framePayload[0];
+      const mimeTerminator = framePayload.indexOf(0, 1);
+
+      if (mimeTerminator >= 0) {
+        const mimeType = new TextDecoder('latin1').decode(framePayload.slice(1, mimeTerminator));
+        let cursor = mimeTerminator + 1;
+
+        if (cursor < framePayload.length) {
+          const pictureType = framePayload[cursor];
+          cursor += 1;
+
+          const descriptionStart = cursor;
+          const descriptionTerminator = encoding === 1 || encoding === 2
+            ? framePayload.indexOf(0x00, descriptionStart + 1) // oversimplified UTF-16/16-bit null scan
+            : framePayload.indexOf(0, descriptionStart);
+
+          const descriptionBytes = descriptionTerminator >= 0
+            ? framePayload.slice(descriptionStart, descriptionTerminator)
+            : framePayload.slice(descriptionStart);
+
+          const description = encoding === 1 || encoding === 2
+            ? new TextDecoder('utf-16').decode(descriptionBytes)
+            : new TextDecoder('latin1').decode(descriptionBytes);
+
+          const nextCursor = descriptionTerminator >= 0
+            ? descriptionTerminator + (encoding === 1 || encoding === 2 ? 2 : 1)
+            : framePayload.length;
+
+          const imageData = framePayload.slice(Math.min(nextCursor, framePayload.length));
+
+          artworkImages.push({
+            mimeType,
+            pictureType,
+            pictureTypeName: APIC_PICTURE_TYPES[pictureType] ?? 'Unknown',
+            description: description.replace(/\u0000+$/g, '').trim(),
+            data: imageData,
+          });
+        }
+      }
+    }
+
+    offset = frameDataEnd;
+  }
+
+  return artworkImages;
+}
 
 export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -49,12 +247,20 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         for await (const [name, entry] of handle.entries()) {
           if (entry.kind === 'file' && name.toLowerCase().endsWith('.mp3')) {
             const file: File = await entry.getFile();
+            const fileBuffer = await file.arrayBuffer();
+            const id3v2 = parseId3v2Metadata(fileBuffer);
+            const id3v1 = parseId3v1Metadata(fileBuffer);
+            const metadata = id3v2 ?? id3v1 ?? null;
             const parsed = parseTrackParts(name);
+            const title = metadata?.title || parsed.name;
+            const artist = metadata?.artist || parsed.artist;
+            const artwork = extractArtworkTypesFromMp3(fileBuffer);
 
             found.push({
               id: `${name}-${file.lastModified}-${file.size}`,
-              name: parsed.name,
-              artist: parsed.artist,
+              name: title,
+              artist,
+              artwork,
               file,
               url: URL.createObjectURL(file),
             });
