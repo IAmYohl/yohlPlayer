@@ -33,6 +33,13 @@
   font-size: 24px;
 }
 
+.track-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .track-name {
   color: #eee;
   font-size: 11px;
@@ -40,8 +47,17 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
 
+.artist-name {
+  color: var(--text-muted, #888);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
 .queue-item {
   padding: 6px 8px;
   border-radius: 2px;

@@ -28,13 +28,33 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const dirHandle: FileSystemDirectoryHandle = await window.showDirectoryPicker();
       const found: Track[] = [];
 
+      function parseTrackParts(fileName: string) {
+        const stem = fileName.replace(/\.mp3$/i, '');
+        const dashMatch = stem.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+
+        if (dashMatch) {
+          return {
+            artist: dashMatch[1].trim() || 'Unknown Artist',
+            name: dashMatch[2].trim() || stem,
+          };
+        }
+
+        return {
+          artist: 'Unknown Artist',
+          name: stem,
+        };
+      }
+
       async function walk(handle: any) {
         for await (const [name, entry] of handle.entries()) {
           if (entry.kind === 'file' && name.toLowerCase().endsWith('.mp3')) {
             const file: File = await entry.getFile();
+            const parsed = parseTrackParts(name);
+
             found.push({
               id: `${name}-${file.lastModified}-${file.size}`,
-              name: name.replace(/\.mp3$/i, ''),
+              name: parsed.name,
+              artist: parsed.artist,
               file,
               url: URL.createObjectURL(file),
             });

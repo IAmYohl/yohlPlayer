@@ -31,6 +31,7 @@ export interface LayoutSchema {
 export interface Track {
   id: string;
   name: string;
+  artist: string;
   file: File;
   url: string;
 }

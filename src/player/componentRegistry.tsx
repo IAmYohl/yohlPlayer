@@ -18,7 +18,10 @@ const MediaViewerWidget: React.FC = () => {
           onClick={() => playTrack(track)}
         >
           <div className="album-art-wrap">🎵</div>
-          <span className="track-name">{track.name}</span>
+          <div className="track-copy">
+            <span className="track-name">{track.name}</span>
+            <span className="artist-name">{track.artist}</span>
+          </div>
         </div>
       ))}
     </div>
