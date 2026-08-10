@@ -1,0 +1,31 @@
+.toolbar {
+  background-color: #222222;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.file-input-btn {
+  background: #333;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.now-playing-audio {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  width: 100%;
+}
+
+.track-count {
+  color: var(--text-muted, #888);
+  font-size: 11px;
+}
