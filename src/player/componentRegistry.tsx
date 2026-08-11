@@ -79,7 +79,17 @@ const CoverArtWidget: React.FC = () => {
 };
 
 const AdvancedPlayerCardWidget: React.FC = () => {
-  const { currentTrack } = useLibrary();
+  const {
+    currentTrack,
+    isPlaying,
+    isShuffleEnabled,
+    isLoopEnabled,
+    playPause,
+    nextTrack,
+    previousTrack,
+    toggleShuffle,
+    toggleLoop,
+  } = useLibrary();
   const artSrc = getArtworkDataUrl(currentTrack);
 
   return (
@@ -110,28 +120,46 @@ const AdvancedPlayerCardWidget: React.FC = () => {
         <span>4:53</span>
       </div>
       <div className="transport">
-        <button className="tbtn" title="Shuffle" aria-label="Shuffle">
+        <button
+          className={`tbtn ${isShuffleEnabled ? 'toggled' : ''}`}
+          title="Shuffle"
+          aria-label="Shuffle"
+          aria-pressed={isShuffleEnabled}
+          onClick={toggleShuffle}
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
           </svg>
         </button>
-        <button className="tbtn" title="Previous" aria-label="Previous track">
+        <button className="tbtn" title="Previous" aria-label="Previous track" onClick={previousTrack}>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 6h2v12H6zM20 6 9 12l11 6z" />
           </svg>
         </button>
-        <button className="tbtn primary" id="playBtn" title="Play/Pause" aria-label="Play or pause">
+        <button className="tbtn primary" id="playBtn" title="Play/Pause" aria-label="Play or pause" onClick={playPause}>
           <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon">
-            <rect x="6" y="5" width="4" height="14" rx="1" />
-            <rect x="14" y="5" width="4" height="14" rx="1" />
+            {isPlaying ? (
+              <>
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </>
+            ) : (
+              <path d="M7 5v14l14-7z" />
+            )}
           </svg>
         </button>
-        <button className="tbtn" title="Next" aria-label="Next track">
+        <button className="tbtn" title="Next" aria-label="Next track" onClick={nextTrack}>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M18 6h-2v12h2zM4 6l11 6-11 6z" />
           </svg>
         </button>
-        <button className="tbtn toggled" title="Repeat" aria-label="Repeat">
+        <button
+          className={`tbtn ${isLoopEnabled ? 'toggled' : ''}`}
+          title="Repeat"
+          aria-label="Repeat"
+          aria-pressed={isLoopEnabled}
+          onClick={toggleLoop}
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
           </svg>

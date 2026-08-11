@@ -36,6 +36,12 @@ export interface ArtworkImage {
   data: Uint8Array;
 }
 
+export interface PlaybackState {
+  isPlaying: boolean;
+  isShuffleEnabled: boolean;
+  isLoopEnabled: boolean;
+}
+
 // Track metadata for audio files
 export interface Track {
   id: string;

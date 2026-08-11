@@ -41,7 +41,19 @@ const INITIAL_GLOBAL_SETTINGS: GlobalCustomizationSettings = {
 };
 
 export function App() {
-  const { tracks, currentTrack, selectDirectory } = useLibrary();
+  const {
+    tracks,
+    currentTrack,
+    isPlaying,
+    isShuffleEnabled,
+    isLoopEnabled,
+    selectDirectory,
+    playPause,
+    nextTrack,
+    previousTrack,
+    toggleShuffle,
+    toggleLoop,
+  } = useLibrary();
   const [layout, setLayout] = useState<LayoutSchema>(INITIAL_LAYOUT);
   const [isEditing, setIsEditing] = useState(false);
   const [isCinematic, setIsCinematic] = useState(false);
@@ -198,6 +210,28 @@ export function App() {
             <button className="file-input-btn" onClick={selectDirectory}>
               📁 Select Directory
             </button>
+            <div className="toolbar-right-wrapper">
+              <div className="transport-strip">
+                <button className={`mini-tbtn ${isShuffleEnabled ? 'active' : ''}`} aria-label="Toggle shuffle" aria-pressed={isShuffleEnabled} onClick={toggleShuffle}>
+                  ⤮
+                </button>
+                <button className="mini-tbtn" aria-label="Previous track" onClick={previousTrack}>
+                  ⏮
+                </button>
+                <button className="mini-tbtn play" aria-label="Play or pause" onClick={playPause}>
+                  {isPlaying ? '⏸' : '▶'}
+                </button>
+                <button className="mini-tbtn" aria-label="Next track" onClick={nextTrack}>
+                  ⏭
+                </button>
+                <button className={`mini-tbtn ${isLoopEnabled ? 'active' : ''}`} aria-label="Toggle repeat" aria-pressed={isLoopEnabled} onClick={toggleLoop}>
+                  ↻
+                </button>
+              </div>
+              <span className="track-count">
+                {currentTrack ? currentTrack.name : tracks.length > 0 ? 'Ready' : 'No track selected'}
+              </span>
+            </div>
             {tracks.length > 0 && <span className="track-count">{tracks.length} tracks loaded</span>}
           </div>
         )}
@@ -219,7 +253,6 @@ export function App() {
           </footer>
         )}
       </div>
-      {currentTrack && <audio src={currentTrack.url} controls autoPlay className="now-playing-audio" />}
     </div>
   );
 }

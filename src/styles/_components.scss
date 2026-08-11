@@ -7,6 +7,46 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.toolbar-right-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.transport-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: #171717;
+  border: 1px solid #333;
+}
+
+.mini-tbtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #ddd;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.mini-tbtn.play {
+  background: var(--accent, #5b5bff);
+  color: #fff;
+}
+
+.mini-tbtn.active {
+  color: var(--accent-hover, #a596ff);
+}
+
 .file-input-btn {
   background: #333;
   color: #fff;
@@ -28,4 +68,5 @@
 .track-count {
   color: var(--text-muted, #888);
   font-size: 11px;
+  align-content: center;
 }
