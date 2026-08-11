@@ -293,6 +293,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [isDirectoryPickerSupported]);
 
   const playTrack = useCallback((track: Track) => {
+    console.log("playTrack executed for:", track.name);
     setCurrentTrack(track);
     setIsPlaying(true);
     if (audioRef.current) {
