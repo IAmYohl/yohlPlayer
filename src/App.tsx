@@ -228,7 +228,7 @@ export function App() {
                   ↻
                 </button>
               </div>
-              <span className="track-count">
+              <span className="current-track">
                 {currentTrack ? currentTrack.name : tracks.length > 0 ? 'Ready' : 'No track selected'}
               </span>
             </div>

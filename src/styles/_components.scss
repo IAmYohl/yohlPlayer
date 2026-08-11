@@ -66,6 +66,12 @@
   width: 100%;
 }
 
+.current-track {
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  align-content: center;
+}
+
 .track-count {
   color: var(--text-muted, #888);
   font-size: 11px;
