@@ -301,7 +301,13 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (audioRef.current.currentSrc !== nextUrl && audioRef.current.src !== nextUrl) {
         audioRef.current.src = nextUrl;
       }
-      void audioRef.current.play();
+      audioRef.current.play().catch((err) => {
+        if (err.name === 'AbortError') {
+          console.log('Playback aborted (likely superseded by a newer play request):', err);
+        } else {
+          console.error('Failed to play track:', err);
+        }
+      });
     }
   }, []);
 
@@ -409,8 +415,6 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {children}
       <audio
         ref={audioRef}
-        src={currentTrack?.url ?? ''}
-        autoPlay={isPlaying}
         loop={isLoopEnabled}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
