@@ -255,18 +255,29 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         };
       }
 
-      async function walk(handle: any) {
+      async function scanDirectoriesForMp3s(handle: any) {
         for await (const [name, entry] of handle.entries()) {
           if (entry.kind === 'file' && name.toLowerCase().endsWith('.mp3')) {
             const file: File = await entry.getFile();
-            const fileBuffer = await file.arrayBuffer();
-            const id3v2 = parseId3v2Metadata(fileBuffer);
-            const id3v1 = parseId3v1Metadata(fileBuffer);
+            
+            const HEADER_SIZE = 256 * 1024; // 256 KB
+            const FOOTER_SIZE = 128; // 128 bytes for ID3v1
+
+            const headerSlice = file.slice(0, HEADER_SIZE);
+            const footerSlice = file.slice(-FOOTER_SIZE);
+
+            const [headerBuffer, footerBuffer] = await Promise.all([
+              headerSlice.arrayBuffer(),
+              footerSlice.arrayBuffer(),
+            ]);
+
+            const id3v2 = parseId3v2Metadata(headerBuffer);
+            const id3v1 = parseId3v1Metadata(footerBuffer);
             const metadata = id3v2 ?? id3v1 ?? null;
             const parsed = parseTrackParts(name);
             const title = metadata?.title || parsed.name;
             const artist = metadata?.artist || parsed.artist;
-            const artwork = extractArtworkTypesFromMp3(fileBuffer);
+            const artwork = extractArtworkTypesFromMp3(headerBuffer);
 
             found.push({
               id: `${name}-${file.lastModified}-${file.size}`,
@@ -277,12 +288,12 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
               url: URL.createObjectURL(file),
             });
           } else if (entry.kind === 'directory') {
-            await walk(entry);
+            await scanDirectoriesForMp3s(entry);
           }
         }
       }
 
-      await walk(dirHandle);
+      await scanDirectoriesForMp3s(dirHandle);
       setTracks(found);
     } catch (err) {
       // AbortError just means the user closed the picker - not a real error
