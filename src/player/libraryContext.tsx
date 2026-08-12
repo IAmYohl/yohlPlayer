@@ -227,6 +227,14 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const isDirectoryPickerSupported = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 
+  const revokeTrackUrls = useCallback((trackList: Track[]) => {
+    trackList.forEach((track) => {
+      if (track.url?.startsWith('blob:')) {
+        URL.revokeObjectURL(track.url);
+      }
+    });
+  }, []);
+
   const selectDirectory = useCallback(async () => {
     if (!isDirectoryPickerSupported) {
       alert("Your browser doesn't support folder selection yet — try Chrome or Edge.");
@@ -294,7 +302,17 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       await scanDirectoriesForMp3s(dirHandle);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+      }
+      revokeTrackUrls(tracks);
+      setCurrentTrack(null);
+      setIsPlaying(false);
       setTracks(found);
+      
     } catch (err) {
       // AbortError just means the user closed the picker - not a real error
       if ((err as Error).name !== 'AbortError') {
