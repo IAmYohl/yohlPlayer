@@ -210,6 +210,9 @@ export function App() {
             <button className="file-input-btn" onClick={selectDirectory}>
               📁 Select Directory
             </button>
+            <span className="current-track">
+              {currentTrack ? currentTrack.name : tracks.length > 0 ? 'Ready' : 'No track selected'}
+            </span>
             <div className="toolbar-right-wrapper">
               <div className="transport-strip">
                 <button className={`mini-tbtn ${isShuffleEnabled ? 'active' : ''}`} aria-label="Toggle shuffle" aria-pressed={isShuffleEnabled} onClick={toggleShuffle}>
@@ -228,9 +231,6 @@ export function App() {
                   ↻
                 </button>
               </div>
-              <span className="current-track">
-                {currentTrack ? currentTrack.name : tracks.length > 0 ? 'Ready' : 'No track selected'}
-              </span>
             </div>
             {tracks.length > 0 && <span className="track-count">{tracks.length} tracks loaded</span>}
           </div>
