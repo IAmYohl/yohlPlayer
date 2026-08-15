@@ -1,0 +1,100 @@
+import React from 'react';
+import { useTrackArtwork } from '../hooks/useTrackArtwork';
+import { useLibrary } from '../player/libraryContext';
+
+export const AdvancedPlayerCardWidget: React.FC = () => {
+  const {
+    currentTrack,
+    isPlaying,
+    isShuffleEnabled,
+    isLoopEnabled,
+    playPause,
+    nextTrack,
+    previousTrack,
+    toggleShuffle,
+    toggleLoop,
+  } = useLibrary();
+  const artSrc = useTrackArtwork(currentTrack);
+
+  return (
+    <div className="now-playing is-playing" id="nowPlaying">
+      <div className="np-art">
+        {artSrc ? (
+          <img className="np-art-image" src={artSrc} alt="" aria-hidden="true" />
+        ) : (
+          <>
+            <div className="art-fill" aria-hidden="true" />
+            <div className="art-grain" aria-hidden="true" />
+            <div className="np-pulse" aria-hidden="true" />
+          </>
+        )}
+      </div>
+      <div className="np-meta">
+        <div className="np-title" id="npTitle">{currentTrack?.name ?? 'No track selected'}</div>
+        <div className="np-artist" id="npArtist">{currentTrack?.artist ?? 'Unknown Artist'}</div>
+      </div>
+      <div className="np-waveform" id="npWave">
+        {Array.from({ length: 34 }, (_, index) => (
+          <span key={index} className={index < 12 ? 'played' : ''} style={{ height: `${34 + ((index * 43) % 76)}%` }} />
+        ))}
+      </div>
+      <div className="np-scrub">
+        <span>2:27</span>
+        <div className="bar"><div className="fill" /></div>
+        <span>4:53</span>
+      </div>
+      <div className="transport">
+        <button
+          className={`tbtn ${isShuffleEnabled ? 'toggled' : ''}`}
+          title="Shuffle"
+          aria-label="Shuffle"
+          aria-pressed={isShuffleEnabled}
+          onClick={toggleShuffle}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+          </svg>
+        </button>
+        <button className="tbtn" title="Previous" aria-label="Previous track" onClick={previousTrack}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h2v12H6zM20 6 9 12l11 6z" />
+          </svg>
+        </button>
+        <button className="tbtn primary" id="playBtn" title="Play/Pause" aria-label="Play or pause" onClick={playPause}>
+          <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon">
+            {isPlaying ? (
+              <>
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </>
+            ) : (
+              <path d="M7 5v14l14-7z" />
+            )}
+          </svg>
+        </button>
+        <button className="tbtn" title="Next" aria-label="Next track" onClick={nextTrack}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 6h-2v12h2zM4 6l11 6-11 6z" />
+          </svg>
+        </button>
+        <button
+          className={`tbtn ${isLoopEnabled ? 'toggled' : ''}`}
+          title="Repeat"
+          aria-label="Repeat"
+          aria-pressed={isLoopEnabled}
+          onClick={toggleLoop}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
+          </svg>
+        </button>
+      </div>
+      <div className="volume-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M11 5 6 9H2v6h4l5 4V5ZM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+        <div className="bar"><div className="fill" /></div>
+      </div>
+    </div>
+  );
+};
