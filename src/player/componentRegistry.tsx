@@ -1,29 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Track, WidgetType } from './types';
 import { useLibrary } from './libraryContext';
 
-function getArtworkDataUrl(track: Track | null | undefined) {
-  if (!track?.artwork?.length) {
-    return undefined;
-  }
+// Resolves and caches a track's cover art as a blob URL via context. Falls
+// back through front -> back -> disc -> icon -> any other embedded image.
+function useTrackArtwork(track: Track | null | undefined): string | undefined {
+  const { getArtworkForTrack } = useLibrary();
+  const [artworkUrl, setArtworkUrl] = useState<string | undefined>(undefined);
 
-  const coverArtwork = track.artwork.find((image) => image.pictureType === 3)
-    ?? track.artwork.find((image) => image.pictureType === 4)
-    ?? track.artwork[0];
+  useEffect(() => {
+    if (!track) {
+      setArtworkUrl(undefined);
+      return;
+    }
 
-  if (!coverArtwork || coverArtwork.data.length === 0) {
-    return undefined;
-  }
+    let cancelled = false;
+    setArtworkUrl(undefined); // clear stale art immediately when the track changes
 
-  let binary = '';
-  const bytes = coverArtwork.data;
+    getArtworkForTrack(track).then((urls) => {
+      if (!cancelled) {
+        setArtworkUrl(urls.front ?? urls.back ?? urls.disc ?? urls.icon ?? urls.other[0]);
+      }
+    });
 
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [track?.id, getArtworkForTrack]);
 
-  return `data:${coverArtwork.mimeType || 'image/jpeg'};base64,${btoa(binary)}`;
+  return artworkUrl;
 }
+
+// Split out so useTrackArtwork is called once per track instance, not a
+// variable number of times inside a single component's .map().
+const AlbumCard: React.FC<{ track: Track; isActive: boolean; onSelect: () => void }> = ({
+  track,
+  isActive,
+  onSelect,
+}) => {
+  const artSrc = useTrackArtwork(track);
+
+  return (
+    <div className={`album-card ${isActive ? 'active' : ''}`} onClick={onSelect}>
+      <div className="album-art-wrap">
+        {artSrc ? <img className="album-art-image" src={artSrc} alt="" /> : <span className="album-art-icon">🎵</span>}
+      </div>
+      <div className="track-copy">
+        <span className="track-name">{track.name}</span>
+        <span className="artist-name">{track.artist}</span>
+      </div>
+    </div>
+  );
+};
 
 const MediaViewerWidget: React.FC = () => {
   const { tracks, currentTrack, playTrack } = useLibrary();
@@ -34,32 +62,21 @@ const MediaViewerWidget: React.FC = () => {
 
   return (
     <div className="music-grid">
-      {tracks.map((track) => {
-        const artSrc = getArtworkDataUrl(track);
-
-        return (
-          <div
-            key={track.id}
-            className={`album-card ${currentTrack?.id === track.id ? 'active' : ''}`}
-            onClick={() => playTrack(track)}
-          >
-            <div className="album-art-wrap">
-              {artSrc ? <img className="album-art-image" src={artSrc} alt="" /> : <span className="album-art-icon">🎵</span>}
-            </div>
-            <div className="track-copy">
-              <span className="track-name">{track.name}</span>
-              <span className="artist-name">{track.artist}</span>
-            </div>
-          </div>
-        );
-      })}
+      {tracks.map((track) => (
+        <AlbumCard
+          key={track.id}
+          track={track}
+          isActive={currentTrack?.id === track.id}
+          onSelect={() => playTrack(track)}
+        />
+      ))}
     </div>
   );
 };
 
 const CoverArtWidget: React.FC = () => {
   const { currentTrack } = useLibrary();
-  const artSrc = getArtworkDataUrl(currentTrack);
+  const artSrc = useTrackArtwork(currentTrack);
 
   return (
     <div className="widget-body cover-art-widget">
@@ -90,7 +107,7 @@ const AdvancedPlayerCardWidget: React.FC = () => {
     toggleShuffle,
     toggleLoop,
   } = useLibrary();
-  const artSrc = getArtworkDataUrl(currentTrack);
+  const artSrc = useTrackArtwork(currentTrack);
 
   return (
     <div className="now-playing is-playing" id="nowPlaying">
